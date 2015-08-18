@@ -1,6 +1,6 @@
 package gz.azure.xml;
 
-import gz.azure.Log;
+import gz.azure.utils.Log;
 import gz.azure.xml.furnidata.Furnidata;
 
 import javax.xml.bind.JAXBContext;

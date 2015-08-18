@@ -1,6 +1,9 @@
 package gz.azure;
 
 import com.jpexs.decompiler.flash.tags.base.ImageTag;
+import gz.azure.utils.Log;
+import gz.azure.utils.OSCheck;
+import gz.azure.utils.SWFData;
 
 import javax.imageio.ImageIO;
 import java.io.File;
@@ -23,7 +26,7 @@ public class DownloadFurniSprites implements Runnable {
     @Override
     public void run() {
         try {
-            URL swfURL = new URL("https:" + Main.externalVariables.getFlashDynamicDownloadURL() + revision + "/" + className + ".swf");
+            URL swfURL = new URL("https:" + SpriteExtractor.externalVariables.getFlashDynamicDownloadURL() + revision + "/" + className + ".swf");
             String path;
             if (OSCheck.getOperatingSystemType() == OSCheck.OSType.Windows) path = "sprites\\";
             else path = "sprites/";

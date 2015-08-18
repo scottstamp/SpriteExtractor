@@ -1,4 +1,4 @@
-package gz.azure;
+package gz.azure.utils;
 
 import com.jpexs.decompiler.flash.SWF;
 import com.jpexs.decompiler.flash.tags.Tag;
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
  * Written by Scott Stamp (scottstamp851, scott@hypermine.com)
  */
 
-class SWFData {
+public class SWFData {
     private SWF swf;
 
     public SWFData(String fileLoc) throws IOException, InterruptedException {

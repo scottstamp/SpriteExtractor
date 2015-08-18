@@ -1,6 +1,7 @@
 package gz.azure;
 
 import gz.azure.txt.ExternalVariables;
+import gz.azure.utils.Log;
 import gz.azure.xml.FiguremapParser;
 import gz.azure.xml.FurnidataParser;
 import gz.azure.xml.figuremap.Map;
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
  * Azure Camera Server - Furni Sprite Extractor
  * Written by Scott Stamp (scottstamp851, scott@hypermine.com)
  */
-class Main {
+public class SpriteExtractor {
     public static ExternalVariables externalVariables;
 
     static {

@@ -1,6 +1,9 @@
 package gz.azure;
 
 import com.jpexs.decompiler.flash.tags.base.ImageTag;
+import gz.azure.utils.Log;
+import gz.azure.utils.OSCheck;
+import gz.azure.utils.SWFData;
 
 import javax.imageio.ImageIO;
 import java.io.File;
@@ -28,7 +31,7 @@ public class DownloadMiscSprites implements Runnable {
     @Override
     public void run() {
         try {
-            URL swfURL = new URL("https:" + Main.externalVariables.getFlashClientURL() + className + ".swf");
+            URL swfURL = new URL("https:" + SpriteExtractor.externalVariables.getFlashClientURL() + className + ".swf");
             String path;
             if (OSCheck.getOperatingSystemType() == OSCheck.OSType.Windows) path = imageType + "\\";
             else path = imageType + "/";
