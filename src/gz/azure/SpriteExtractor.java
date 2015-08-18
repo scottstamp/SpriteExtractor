@@ -25,12 +25,12 @@ import java.util.stream.Collectors;
  */
 public class SpriteExtractor {
     public static ExternalVariables externalVariables;
-    private static final boolean downloadMisc = false;
-    private static final boolean downloadPets = false;
-    private static final boolean downloadFigures = false;
+    private static final boolean downloadMisc = true;
+    private static final boolean downloadPets = true;
+    private static final boolean downloadFigures = true;
     private static final boolean downloadEffects = true;
-    private static final boolean downloadMasks = false;
-    private static final boolean downloadFurni = false;
+    private static final boolean downloadMasks = true;
+    private static final boolean downloadFurni = true;
 
     static {
         try {
