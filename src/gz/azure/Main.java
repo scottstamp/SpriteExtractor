@@ -1,18 +1,18 @@
 package gz.azure;
 
-import com.jpexs.decompiler.flash.tags.base.ImageTag;
+import gz.azure.txt.ExternalVariables;
+import gz.azure.xml.FiguremapParser;
 import gz.azure.xml.FurnidataParser;
+import gz.azure.xml.figuremap.Map;
 import gz.azure.xml.furnidata.Furnidata;
 
-import javax.imageio.ImageIO;
-import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -20,7 +20,15 @@ import java.util.stream.Collectors;
  * Written by Scott Stamp (scottstamp851, scott@hypermine.com)
  */
 class Main {
-    private static final List<String> downloadedFurnis = new ArrayList<>();
+    public static ExternalVariables externalVariables;
+
+    static {
+        try {
+            externalVariables = new ExternalVariables(new URL("https://www.habbo.com/gamedata/external_variables/1"));
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
+        }
+    }
 
     public static void main(String[] args) throws Throwable {
         Log.println("             Azure Camera Server - Furni Sprite Extractor");
@@ -30,40 +38,52 @@ class Main {
         Log.println("      It means they're no longer hosted on Habbo's server. This is normal.");
         Log.println();
 
-        Files.createDirectory(Paths.get("images"));
+        // Download all pet sprites
+        ExecutorService downloadPool = Executors.newFixedThreadPool(8);
+        List<Callable<Object>> downloadTasks = externalVariables.getPets().stream()
+                .map(pet -> Executors.callable(new DownloadMiscSprites("sprites", pet, false)))
+                .collect(Collectors.toList());
 
-        List<Furnidata.Roomitemtypes.Furnitype> roomItemTypes
-                = FurnidataParser.getFurnidata().getRoomitemtypes().getFurnitype();
-        List<Furnidata.Wallitemtypes.Furnitype> wallItemTypes
-                = FurnidataParser.getFurnidata().getWallitemtypes().getFurnitype();
+        // Download all figure sprites
+        Map figuremap = FiguremapParser.getFiguremap();
+        if (figuremap != null) {
+            downloadTasks.addAll(figuremap.getLib().stream()
+                    .map(lib -> Executors.callable(new DownloadMiscSprites("sprites", lib.getId(), false)))
+                    .collect(Collectors.toList()));
+        }
 
-        for (Furnidata.Roomitemtypes.Furnitype roomItem : roomItemTypes)
-            DownloadImages(roomItem.getRevision(), roomItem.getClassname().split("\\*")[0]);
+        // Download all wall/floor/landscape masks
+        downloadTasks.add(Executors.callable(new DownloadMiscSprites("masks", "HabboRoomContent", true)));
 
-        for (Furnidata.Wallitemtypes.Furnitype wallItem : wallItemTypes)
-            DownloadImages(wallItem.getRevision(), wallItem.getClassname().split("\\*")[0]);
-    }
+        // Download all furni sprites
+        Furnidata furnidata = FurnidataParser.getFurnidata();
+        if (furnidata != null) {
+            List<Furnidata.Roomitemtypes.Furnitype> roomItemTypes
+                    = furnidata.getRoomitemtypes().getFurnitype();
+            List<Furnidata.Wallitemtypes.Furnitype> wallItemTypes
+                    = furnidata.getWallitemtypes().getFurnitype();
 
-    private static void DownloadImages(int revision, String className) throws MalformedURLException {
-        URL swfURL = new URL("https://habboo-a.akamaihd.net/dcr/hof_furni/" + revision + "/" + className + ".swf");
+            List<String> itemClassNames = new ArrayList<>();
 
-        try {
-            if (downloadedFurnis.contains(className)) return;
-            else Files.createDirectory(Paths.get("images\\" + className));
+            for (Furnidata.Roomitemtypes.Furnitype item : roomItemTypes) {
+                String className = item.getClassname().split("\\*")[0];
+                if (!itemClassNames.contains(className))
+                    downloadTasks.add(Executors.callable(new DownloadFurniSprites(item.getRevision(), className)));
 
-            Log.info("Extracting: " + swfURL.toString());
-
-            SWFData swfData = new SWFData(swfURL);
-
-            for (ImageTag tag : swfData.getImageTags()) {
-                String spriteName = Arrays.stream(tag.getClassName().split(className + "_"))
-                        .distinct().collect(Collectors.joining(className + "_"));
-                ImageIO.write(tag.getImage().getBufferedImage(), "png", new File("images\\" + spriteName + ".png"));
+                itemClassNames.add(className);
             }
 
-            downloadedFurnis.add(className);
-        } catch (Throwable ex) {
-            Log.error("Failed to load/extract: " + swfURL);
+            for (Furnidata.Wallitemtypes.Furnitype item : wallItemTypes) {
+                String className = item.getClassname().split("\\*")[0];
+                if (!itemClassNames.contains(className))
+                    downloadTasks.add(Executors.callable(new DownloadFurniSprites(item.getRevision(), className)));
+
+                itemClassNames.add(className);
+            }
         }
+
+        downloadPool.invokeAll(downloadTasks);
+        downloadPool.shutdown();
+        downloadPool.awaitTermination(10, TimeUnit.SECONDS);
     }
 }
