@@ -2,11 +2,14 @@ package gz.azure;
 
 import gz.azure.txt.ExternalVariables;
 import gz.azure.utils.Log;
-import gz.azure.xml.FiguremapParser;
-import gz.azure.xml.FurnidataParser;
-import gz.azure.xml.figuremap.Map;
+import gz.azure.xml.effectmap.Effectmap;
+import gz.azure.xml.effectmap.EffectmapParser;
+import gz.azure.xml.figuremap.Figuremap;
+import gz.azure.xml.figuremap.FiguremapParser;
 import gz.azure.xml.furnidata.Furnidata;
+import gz.azure.xml.furnidata.FurnidataParser;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +25,12 @@ import java.util.stream.Collectors;
  */
 public class SpriteExtractor {
     public static ExternalVariables externalVariables;
+    private static final boolean downloadMisc = false;
+    private static final boolean downloadPets = false;
+    private static final boolean downloadFigures = false;
+    private static final boolean downloadEffects = true;
+    private static final boolean downloadMasks = false;
+    private static final boolean downloadFurni = false;
 
     static {
         try {
@@ -32,31 +41,35 @@ public class SpriteExtractor {
     }
 
     public static void main(String[] args) throws Throwable {
-        Log.println("             Azure Camera Server - Furni Sprite Extractor");
+        Log.println("               Azure Camera Server - Sprite Extractor");
         Log.println("      Written by Scott Stamp (scottstamp851, scott@hypermine.com)");
         Log.println();
         Log.println("Note: Some files may fail to download/extract. Common with low revision ID numbers.");
         Log.println("      It means they're no longer hosted on Habbo's server. This is normal.");
         Log.println();
 
-        // Download all pet sprites
         ExecutorService downloadPool = Executors.newFixedThreadPool(8);
-        List<Callable<Object>> downloadTasks = externalVariables.getPets().stream()
-                .map(pet -> Executors.callable(new DownloadMiscSprites("sprites", pet, false)))
-                .collect(Collectors.toList());
+        List<Callable<Object>> downloadTasks = new ArrayList<>();
 
+        // Download misc. files (specified in config_habbo.xml)
+        if (downloadMisc) downloadMisc(downloadTasks);
+        // Download all pet sprites
+        if (downloadPets) downloadPets(downloadTasks);
         // Download all figure sprites
-        Map figuremap = FiguremapParser.getFiguremap();
-        if (figuremap != null) {
-            downloadTasks.addAll(figuremap.getLib().stream()
-                    .map(lib -> Executors.callable(new DownloadMiscSprites("sprites", lib.getId(), false)))
-                    .collect(Collectors.toList()));
-        }
-
+        if (downloadFigures) downloadFigures(downloadTasks);
+        // Download all effects sprites
+        if (downloadEffects) downloadEffects(downloadTasks);
         // Download all wall/floor/landscape masks
-        downloadTasks.add(Executors.callable(new DownloadMiscSprites("masks", "HabboRoomContent", true)));
-
+        if (downloadMasks) downloadMasks(downloadTasks);
         // Download all furni sprites
+        if (downloadFurni) downloadFurni(downloadTasks);
+
+        downloadPool.invokeAll(downloadTasks);
+        downloadPool.shutdown();
+        downloadPool.awaitTermination(10, TimeUnit.SECONDS);
+    }
+
+    private static void downloadFurni(List<Callable<Object>> downloadTasks) {
         Furnidata furnidata = FurnidataParser.getFurnidata();
         if (furnidata != null) {
             List<Furnidata.Roomitemtypes.Furnitype> roomItemTypes
@@ -82,9 +95,43 @@ public class SpriteExtractor {
                 itemClassNames.add(className);
             }
         }
+    }
 
-        downloadPool.invokeAll(downloadTasks);
-        downloadPool.shutdown();
-        downloadPool.awaitTermination(10, TimeUnit.SECONDS);
+    private static void downloadMasks(List<Callable<Object>> downloadTasks) {
+        downloadTasks.add(Executors.callable(new DownloadMiscSprites("masks", "HabboRoomContent", true)));
+    }
+
+    private static void downloadEffects(List<Callable<Object>> downloadTasks) throws MalformedURLException {
+        Effectmap effectmap = EffectmapParser.getEffectmap(
+                new URL("https:" + externalVariables.getFlashClientURL() + "effectmap.xml"));
+
+        if (effectmap != null) {
+            downloadTasks.addAll(effectmap.getEffects().stream()
+                    .map(effect -> Executors.callable(new DownloadMiscSprites("sprites", effect.getLib(), false)))
+                    .collect(Collectors.toList()));
+        }
+    }
+
+    private static void downloadFigures(List<Callable<Object>> downloadTasks) throws MalformedURLException {
+        Figuremap figuremap = FiguremapParser.getFiguremap(
+                new URL("https:" + externalVariables.getFlashClientURL() + "effectmap.xml"));
+
+        if (figuremap != null) {
+            downloadTasks.addAll(figuremap.getLib().stream()
+                    .map(lib -> Executors.callable(new DownloadMiscSprites("sprites", lib.getId(), false)))
+                    .collect(Collectors.toList()));
+        }
+    }
+
+    private static void downloadPets(List<Callable<Object>> downloadTasks) {
+        downloadTasks.addAll(externalVariables.getPets().stream()
+                .map(pet -> Executors.callable(new DownloadMiscSprites("sprites", pet, false)))
+                .collect(Collectors.toList()));
+    }
+
+    private static void downloadMisc(List<Callable<Object>> downloadTasks) {
+        downloadTasks.add(Executors.callable(new DownloadMiscSprites("sprites", "hh_human_body", true)));
+        downloadTasks.add(Executors.callable(new DownloadMiscSprites("sprites", "hh_human_fx", true)));
+        downloadTasks.add(Executors.callable(new DownloadMiscSprites("sprites", "hh_human_item", true)));
     }
 }

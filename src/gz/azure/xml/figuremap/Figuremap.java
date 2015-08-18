@@ -56,9 +56,9 @@ import java.util.List;
         "lib"
 })
 @XmlRootElement(name = "map")
-public class Map {
+public class Figuremap {
 
-    protected List<Map.Lib> lib;
+    protected List<Figuremap.Lib> lib;
 
     /**
      * Gets the value of the lib property.
@@ -78,11 +78,11 @@ public class Map {
      * <p>
      * <p>
      * Objects of the following type(s) are allowed in the list
-     * {@link Map.Lib }
+     * {@link Figuremap.Lib }
      */
-    public List<Map.Lib> getLib() {
+    public List<Figuremap.Lib> getLib() {
         if (lib == null) {
-            lib = new ArrayList<Map.Lib>();
+            lib = new ArrayList<Figuremap.Lib>();
         }
         return this.lib;
     }
@@ -122,7 +122,7 @@ public class Map {
     })
     public static class Lib {
 
-        protected List<Map.Lib.Part> part;
+        protected List<Figuremap.Lib.Part> part;
         @XmlAttribute(name = "id")
         protected String id;
         @XmlAttribute(name = "revision")
@@ -146,11 +146,11 @@ public class Map {
          * <p>
          * <p>
          * Objects of the following type(s) are allowed in the list
-         * {@link Map.Lib.Part }
+         * {@link Figuremap.Lib.Part }
          */
-        public List<Map.Lib.Part> getPart() {
+        public List<Figuremap.Lib.Part> getPart() {
             if (part == null) {
-                part = new ArrayList<Map.Lib.Part>();
+                part = new ArrayList<Figuremap.Lib.Part>();
             }
             return this.part;
         }

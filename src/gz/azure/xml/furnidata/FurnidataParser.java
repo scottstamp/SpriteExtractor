@@ -1,7 +1,6 @@
-package gz.azure.xml;
+package gz.azure.xml.furnidata;
 
 import gz.azure.utils.Log;
-import gz.azure.xml.furnidata.Furnidata;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;

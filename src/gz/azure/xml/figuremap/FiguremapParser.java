@@ -1,7 +1,6 @@
-package gz.azure.xml;
+package gz.azure.xml.figuremap;
 
 import gz.azure.utils.Log;
-import gz.azure.xml.figuremap.Map;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -15,7 +14,7 @@ import java.net.URL;
  * Created by Scott on 8/18/2015.
  */
 public class FiguremapParser {
-    public static Map getFiguremap() {
+    public static Figuremap getFiguremap() {
         try {
             return getFiguremap(new URL("https://habboo-a.akamaihd.net/gordon/PRODUCTION-201508111205-320867585/figuremap.xml"));
         } catch (MalformedURLException e) {
@@ -24,12 +23,12 @@ public class FiguremapParser {
         }
     }
 
-    public static Map getFiguremap(URL sourceURL) {
+    public static Figuremap getFiguremap(URL sourceURL) {
         try {
-            JAXBContext jc = JAXBContext.newInstance(Map.class);
+            JAXBContext jc = JAXBContext.newInstance(Figuremap.class);
             Unmarshaller unmarshaller = jc.createUnmarshaller();
             StreamSource src = new StreamSource(sourceURL.openStream());
-            return ((Map) unmarshaller.unmarshal(src));
+            return ((Figuremap) unmarshaller.unmarshal(src));
         } catch (JAXBException jaxbEx) {
             Log.error("Failed to create new JAXB instance", jaxbEx);
             return null;
