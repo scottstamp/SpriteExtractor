@@ -107,18 +107,18 @@ public class SpriteExtractor {
 
         if (effectmap != null) {
             downloadTasks.addAll(effectmap.getEffects().stream()
-                    .map(effect -> Executors.callable(new DownloadMiscSprites("sprites", effect.getLib(), false)))
+                    .map(effect -> Executors.callable(new DownloadMiscSprites("sprites", effect.getLib(), true)))
                     .collect(Collectors.toList()));
         }
     }
 
     private static void downloadFigures(List<Callable<Object>> downloadTasks) throws MalformedURLException {
         Figuremap figuremap = FiguremapParser.getFiguremap(
-                new URL("https:" + externalVariables.getFlashClientURL() + "effectmap.xml"));
+                new URL("https:" + externalVariables.getFlashClientURL() + "figuremap.xml"));
 
         if (figuremap != null) {
             downloadTasks.addAll(figuremap.getLib().stream()
-                    .map(lib -> Executors.callable(new DownloadMiscSprites("sprites", lib.getId(), false)))
+                    .map(lib -> Executors.callable(new DownloadMiscSprites("sprites", lib.getId(), true)))
                     .collect(Collectors.toList()));
         }
     }
